@@ -1,0 +1,16 @@
+name : MUUFL
+img_size : [32,32]
+root : /home/data/shared_datasets/MUUFL/${dataset.img_size[0]}x${dataset.img_size[0]}forSeg
+hsi_channel : 64
+LB : 375
+UB : 1050
+lidar_channel : 2
+num_classes : 11 #without background
+rate : [1.0,1,1,1,1,1,1,1,1,1,1]
+data_begin :
+  HSI : 
+    root: '/home/data2/cmx/HSI_LIDAR/data_begin/MUFFL/hsi.mat'
+    key: 'HSI'
+  LiDAR :
+    root: '/home/data2/cmx/HSI_LIDAR/data_begin/MUFFL/lidar.mat'
+    key: 'lidar'

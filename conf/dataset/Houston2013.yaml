@@ -1,0 +1,22 @@
+name : Houston2013
+img_size : [32,32]
+root : /home/data2/cmx/HSI_LIDAR/data/Houston2013
+hsi_channel : 144
+LB : 380
+UB : 1050
+lidar_channel : 1
+num_classes : 15 #without background
+rate : [1.0,1,1,1,1,1,1,1,1,1,1,1,1,1,1]
+data_begin :
+  HSI : 
+    root: '/home/data/shared_datasets/Houston2013/raw/HSI.mat'
+    key: 'HSI'
+  LiDAR :
+    root: '/home/data/shared_datasets/Houston2013/raw/LiDAR_1.mat'
+    key: 'LiDAR'
+  train_label :
+    root : '/home/data/shared_datasets/Houston2013/raw/TRLabel.mat'
+    key : 'TRLabel'
+  test_label :  
+    root: '/home/data/shared_datasets/Houston2013/raw/TSLabel.mat'
+    key: 'TSLabel'

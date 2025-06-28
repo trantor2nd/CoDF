@@ -1,0 +1,22 @@
+name : Trento
+img_size : [32,32]
+root : /home/data/shared_datasets/Trento/${dataset.img_size[0]}x${dataset.img_size[0]}forSeg
+hsi_channel : 63
+LB : 400
+UB : 1000
+lidar_channel : 1
+num_classes : 6 #without background
+rate : [1.0,1,1,1,1,1]
+data_begin :
+  HSI : 
+    root: '/home/data/shared_datasets/Trento/raw/HSI.mat'
+    key: 'HSI'
+  LiDAR :
+    root: '/home/data/shared_datasets/Trento/raw/LiDAR.mat'
+    key: 'LiDAR'
+  train_label :
+    root: '/home/data/shared_datasets/Trento/raw/TRLabel.mat'
+    key: 'TRLabel'
+  test_label :
+    root: '/home/data/shared_datasets/Trento/raw/TSLabel.mat'
+    key: 'TSLabel'

@@ -1,0 +1,68 @@
+model:
+  CoDF: ReSeer
+  training_settings:
+    seed: 3407
+    device: cuda:0
+    num_workers: 16
+    train_batch_size: 32
+    test_batch_size: 32
+    epochs: 100
+    early_stop: 1000
+    dropout: 0.1
+    checkpoint: /home/data/hsb/checkpoint/ReSeer_Houston2013.pt
+  optimizer:
+    _target_: torch.optim.AdamW
+    lr: 0.0001
+    weight_decay: 0.01
+  scheduler:
+    _target_: torch.optim.lr_scheduler.CosineAnnealingLR
+    T_max: ${model.training_settings.epochs}
+  use_model:
+    _target_: model.ReSeer.top.ReSeer
+    drop: ${model.training_settings.dropout}
+    in_dim1: ${dataset.hsi_channel}
+    in_dim2: ${dataset.lidar_channel}
+    out_dim: ${dataset.num_classes}
+    layers:
+    - 2
+    - 6
+    - 2
+    embed_dim:
+    - 64
+    - 128
+    - 256
+    hidden_dim: 128
+dataset:
+  name: Houston2013
+  img_size:
+  - 32
+  - 32
+  root: /home/data2/cmx/HSI_LIDAR/data/Houston2013
+  hsi_channel: 144
+  LB: 380
+  UB: 1050
+  lidar_channel: 1
+  num_classes: 15
+  rate:
+  - 1.0
+  - 1
+  - 1
+  - 1
+  - 1
+  - 1
+  - 1
+  - 1
+  - 1
+  - 1
+  - 1
+  - 1
+  - 1
+  - 1
+  - 1
+  data_begin:
+    HSI:
+      root: /home/data2/cmx/HSI_LIDAR/data_begin/Houston2013/HSI.mat
+      key: HSI
+    LiDAR:
+      root: /home/data2/cmx/HSI_LIDAR/data_begin/Houston2013/LiDAR_1.mat
+      key: LiDAR

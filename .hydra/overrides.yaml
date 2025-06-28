@@ -1,0 +1,6 @@
+- dataset=Houston2013
+- model=ReSeer
+- dataset.img_size=[32,32]
+- model.training_settings.device=cuda:0
+- model.training_settings.dropout=0.1
+- model.training_settings.checkpoint=/home/data/hsb/checkpoint/ReSeer_Houston2013.pt
