@@ -76,7 +76,7 @@ def crop_img2model(
     lidar_pad[pad_x % crop_size:, pad_y % crop_size:] = lidar
 
     outs = np.zeros(shape=(x, y))
-    #outs = torch.zeros(x,y)
+   
     for i in tqdm.tqdm(range(crop_size // 2, x - crop_size // 2 + 1, crop_size)):
         for j in range(crop_size // 2, y - crop_size // 2 + 1, crop_size):
             crop_hsi = hsi_pad[i - crop_size // 2: i + crop_size // 2, j - crop_size // 2: j + crop_size // 2]
@@ -111,12 +111,12 @@ def main(cfg: DictConfig):
     print(OmegaConf.to_yaml(cfg))
 
     #-----------------------------------------------------------------
-    model_path = cfg.model.training_settings.checkpoint
+    model_path = cfg.model.train.save_dir + cfg.model.name +'/'+ cfg.dataset.name + '/best_model.pt'
     crop_size = cfg.dataset.img_size[0]
     #-----------------------------------------------------------------
 
     #-----------------------------------------------------------------
-    device = torch.device(cfg.model.training_settings.device if torch.cuda.is_available() else 'cpu')
+    device = torch.device(cfg.model.train.device if torch.cuda.is_available() else 'cpu')
     print(torch.cuda.is_available())
 
     model = hydra.utils.instantiate(

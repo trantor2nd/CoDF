@@ -6,7 +6,6 @@ LB : 380
 UB : 1050
 lidar_channel : 1
 num_classes : 15 #without background
-rate : [1.0,1,1,1,1,1,1,1,1,1,1,1,1,1,1]
 data_begin :
   HSI : 
     root: '/home/data/shared_datasets/Houston2013/raw/HSI.mat'

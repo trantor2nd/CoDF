@@ -1,3 +1,5 @@
+import os
+import logging
 import torch
 from torch.utils import data
 from thop import profile
@@ -8,37 +10,50 @@ from omegaconf import DictConfig, OmegaConf
 import model
 import utils
 import utils.func
-import utils.mm_loader
+import utils.LULC_loader
 import utils.metric
+
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.DEBUG)
 
 @hydra.main(version_base=None, config_path="./conf", config_name="config")
 def main(cfg : DictConfig) -> None:
-    print(OmegaConf.to_yaml(cfg))
-    
-    #--------------------------------------------------------------------------------------------
-    utils.func.set_seed(cfg.model.training_settings.seed)
 
-    device = torch.device(cfg.model.training_settings.device if torch.cuda.is_available() else 'cpu')
+    logger.debug(OmegaConf.to_yaml(cfg))
+    save_path = cfg.model.train.save_dir + cfg.model.name +'/'+ cfg.dataset.name
+    foler = os.path.exists(save_path)
+    if not foler:
+        os.makedirs(save_path)
+    seed = cfg.model.train.seed
+    device = cfg.model.train.device
+    num_workers = cfg.model.train.num_workers
+    batch_size = cfg.model.train.batch_size
+    epochs = cfg.model.train.epochs
+
+    #--------------------------------------------------------------------------------------------
+    utils.func.set_seed(seed)
+    device = torch.device(device if torch.cuda.is_available() else 'cpu')
     print(torch.cuda.is_available())
-
     #--------------------------------------------------------------------------------------------
-    train_sets = utils.mm_loader.mm_dataset(cfg,phase ='train')
-    test_sets = utils.mm_loader.mm_dataset(cfg,phase ='test')
+    
+    train_sets = utils.LULC_loader.LULC_dataset(cfg,phase ='train')
+    test_sets = utils.LULC_loader.LULC_dataset(cfg,phase ='test')
 
-    print("train : {} , test : {}".format(len(train_sets),len(test_sets)))
+    logger.debug("train : {} , test : {}".format(len(train_sets),len(test_sets)))
+
     train_loader = data.DataLoader(
         train_sets,
-        cfg.model.training_settings.train_batch_size, 
+        batch_size, 
         shuffle=False, 
         drop_last=True,
-        num_workers=cfg.model.training_settings.num_workers
+        num_workers=num_workers
     )
     test_loader = data.DataLoader(
         test_sets,
-        cfg.model.training_settings.test_batch_size, 
+        batch_size, 
         shuffle=False, 
         drop_last=True,
-        num_workers=cfg.model.training_settings.num_workers
+        num_workers=num_workers
     )
 
     #--------------------------------------------------------------------------------------------
@@ -50,7 +65,6 @@ def main(cfg : DictConfig) -> None:
     #--------------------------------------------------------------------------------------------
     criterion = torch.nn.CrossEntropyLoss(
         reduction = 'mean',
-        weight = torch.tensor(cfg.dataset.rate)
     ).to(device)
     
 
@@ -70,17 +84,15 @@ def main(cfg : DictConfig) -> None:
 
 
     flops,params=profile(model,inputs=(input1,input2))
-    print("flops: {:.3f} G , params: {:.3f} M ".format(flops/1e9,params/1e6))
+    logger.debug("flops: {:.3f} G , params: {:.3f} M ".format(flops/1e9,params/1e6))
     torch.cuda.empty_cache()
-
-    #--------------------------------------------------------------------------------------------
     
-    #load pt-------------------
-    #model.load_state_dict(torch.load(arg.co_meta,weights_only=True),False)
 
-
-    for epoch in range(cfg.model.training_settings.epochs):
-        #------------------------------------------
+    #training------------------------------------------------------------------------------------
+    best_oa = 0
+    for epoch in range(epochs):
+        logger.debug(f'Epoch: {epoch} start-------')
+        
         model.train()
         loop = tqdm(enumerate(train_loader),total = len(train_loader),leave=False)
         for batch_idx, (hsi, lidar , label , mask) in loop :
@@ -99,12 +111,12 @@ def main(cfg : DictConfig) -> None:
             pred = pred[idx[0], :, idx[1]]
             label = label[idx]
             
-            loss = criterion(pred, label) +model.loss
+            loss = criterion(pred, label) + model.loss
 
             loss.backward()
             optimizer.step()
             loop.set_description('train')
-        scheduler.step()
+        
         train_loss = loss.item()
 
         #------------------------------------------
@@ -129,7 +141,7 @@ def main(cfg : DictConfig) -> None:
                 pred = pred[idx[0], :, idx[1]]
                 label = label[idx]
 
-                loss = criterion(pred, label) +model.loss
+                loss = criterion(pred, label) + model.loss
             
                 test_loss += loss.item()
 
@@ -141,19 +153,21 @@ def main(cfg : DictConfig) -> None:
         torch.cuda.empty_cache()
 
         test_loss = test_loss/(batch_idx+1)
-        print("[ epoch: {}  ,  train_loss: {:.4f}  ,  test_loss: {:.4f}  ".format(epoch,train_loss,test_loss), '//' ,
-           " OA: {:.2f} %  ,  AA: {:.2f} %  ,  k: {:.2f} %  ]".format( oa*100,aa*100,k*100))
+      
+        logger.debug("Epoch: {}  |  train_loss: {:.4f}  |  test_loss: {:.4f}  ||  OA: {:.2f} %  |  AA: {:.2f} %  |  k: {:.2f} %".format(epoch,train_loss,test_loss, oa*100,aa*100,k*100))
 
         #check point
+        if(oa > best_oa):
+            best_oa = oa
+            best_aa = aa
+            best_k = k
+            best_model_path = save_path + '/best_model.pt'
+            checkpoint = model.module.state_dict() if isinstance(model,torch.nn.DataParallel) else model.state_dict()
+            torch.save(checkpoint, best_model_path)
+        scheduler.step()
 
-        if isinstance(model,torch.nn.DataParallel):
-            torch.save(model.module.state_dict(),cfg.model.training_settings.checkpoint)
-        else :
-            torch.save(model.state_dict(),cfg.model.training_settings.checkpoint)
-        if epoch == cfg.model.training_settings.early_stop:
-            break
-
-
+    logger.debug("Best: OA: {:.2f} %  |  AA: {:.2f} %  |  k: {:.2f} %".format( best_oa*100,best_aa*100,best_k*100))
+    logger.debug(f'best model saved at {best_model_path}')
 
 if __name__ == "__main__" :
     main()

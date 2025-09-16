@@ -6,7 +6,6 @@ LB : 400
 UB : 1000
 lidar_channel : 1
 num_classes : 6 #without background
-rate : [1.0,1,1,1,1,1]
 data_begin :
   HSI : 
     root: '/home/data/shared_datasets/Trento/raw/HSI.mat'

@@ -1,15 +1,13 @@
 name : CoDF
-training_settings :
+train:
   seed : 3407
   device : cuda:0
   num_workers : 16
-  train_batch_size : 32
-  test_batch_size : 32
+  batch_size : 32
   epochs : 100
-  early_stop : 1000
   dropout : 0.1
-  checkpoint : /home/data/hsb/checkpoint/CoDF.pt
-
+  save_dir : /home/data/hsb/checkpoint/LULC/
+  
 optimizer :
   _target_: torch.optim.AdamW
   lr: 1e-4
@@ -18,12 +16,12 @@ optimizer :
 
 scheduler : 
   _target_ : torch.optim.lr_scheduler.CosineAnnealingLR
-  T_max : ${model.training_settings.epochs}
+  T_max : ${model.train.epochs}
 
 
 use_model : 
   _target_ : model.CoDF.top.CoDF
-  drop : ${model.training_settings.dropout}
+  drop : ${model.train.dropout}
   in_dim1 : ${dataset.hsi_channel}
   in_dim2 : ${dataset.lidar_channel}
   out_dim : ${dataset.num_classes}

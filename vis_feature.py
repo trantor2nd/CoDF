@@ -111,12 +111,12 @@ def main(cfg: DictConfig):
     print(OmegaConf.to_yaml(cfg))
 
     #-----------------------------------------------------------------
-    model_path = cfg.model.training_settings.checkpoint
+    model_path = cfg.model.train.save_dir + cfg.model.name +'/'+ cfg.dataset.name + '/best_model.pt'
     crop_size = cfg.dataset.img_size[0]
     #-----------------------------------------------------------------
 
     #-----------------------------------------------------------------
-    device = torch.device(cfg.model.training_settings.device if torch.cuda.is_available() else 'cpu')
+    device = torch.device(cfg.model.train.device if torch.cuda.is_available() else 'cpu')
     print(torch.cuda.is_available())
 
     model = hydra.utils.instantiate(

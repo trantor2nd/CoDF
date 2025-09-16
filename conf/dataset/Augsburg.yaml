@@ -6,7 +6,6 @@ LB : 400
 UB : 1050
 lidar_channel : 4
 num_classes : 7 #without background
-rate : [1.0 , 1 , 1 , 1 , 1 , 1 , 1]
 data_begin :
   HSI : 
     root: '/home/data2/cmx/HSI_LIDAR/data_begin/Augsburg/data_hsi.mat'

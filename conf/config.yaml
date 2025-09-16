@@ -2,13 +2,10 @@ defaults:
   - _self_
   - model: CoDF
   - dataset: Houston2013 #Augsburg, MUUFL, Trento
-  - override hydra/hydra_logging: disabled  
-  - override hydra/job_logging: disabled  
-hydra:
-  output_subdir: null
-  run:
-    dir: .
 
-datacrop:
-  type : center #full
-  size : 32
+hydra:
+  run:
+    dir: ./outputs/${now:%Y-%m-%d}/${now:%H-%M-%S}
+  job:
+    env_set:
+      HYDRA_FULL_ERROR: 1
