@@ -161,12 +161,15 @@ def main(cfg : DictConfig) -> None:
             best_oa = oa
             best_aa = aa
             best_k = k
+            best_cm = cm
             best_model_path = save_path + '/best_model.pt'
             checkpoint = model.module.state_dict() if isinstance(model,torch.nn.DataParallel) else model.state_dict()
             torch.save(checkpoint, best_model_path)
         scheduler.step()
 
     logger.debug("Best: OA: {:.2f} %  |  AA: {:.2f} %  |  k: {:.2f} %".format( best_oa*100,best_aa*100,best_k*100))
+    logger.debug("per_class_accuracy:")
+    logger.debug(utils.metric.calculate_metrics_aa(best_cm))
     logger.debug(f'best model saved at {best_model_path}')
 
 if __name__ == "__main__" :
